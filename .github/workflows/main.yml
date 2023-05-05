@@ -14,7 +14,6 @@
 #jobs:
   # Enter your job steps here
 
-
 name: CI/CD Pipeline
 
 on:
@@ -25,42 +24,35 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '16'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run tests
-      run: npm test
-
-    - name: Build Docker image
-      run: |
-        docker build -t assignment/my-app:$GITHUB_SHA .
-        docker tag assignment/my-app:$GITHUB_SHA assignment/my-app:latest
-
-    - name: Push Docker image to GitHub Container Registry
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: |
-         assignment/my-app:$GITHUB_SHA
-          assignment/my-app:latest
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
-    - name: Release Docker image to Railway
-      run: |
-        curl https://railway.app/cli | bash
-        railway login
-        railway use stingy-sky
-        railway run "docker pull ghcr.io/assignment/my-app:latest && docker run -d -p 80:3000 ghcr.io/assignment/my-app:latest"
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'
+      - name: Install dependencies
+        run: npm install
+      - name: Run tests
+        run: npm test
+      - name: Build Docker image
+        run: |
+          docker build -t assignment/my-app:$GITHUB_SHA .
+          docker tag assignment/my-app:$GITHUB_SHA assignment/my-app:latest
+      - name: Push Docker image to GitHub Container Registry
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/assignment/my-app:$GITHUB_SHA
+            ghcr.io/assignment/my-app:latest
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release Docker image to Railway
+        run: |
+          curl https://railway.app/cli | bash
+          railway login
+          railway use stingy-sky
+          railway run "docker pull ghcr.io/assignment/my-app:latest && docker run -d -p 80:3000 ghcr.io/assignment/my-app:latest"
