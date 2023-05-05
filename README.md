@@ -1,2 +1,2 @@
 # assignment
-The workflow should run
+The workflow should run.
