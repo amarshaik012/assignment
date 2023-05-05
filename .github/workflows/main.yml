@@ -1,0 +1,61 @@
+# Write a github actions workflow that does the following:
+# Tests the code using Jest and the pre-built `npm run test` command
+# Builds a docker image using the Dockerfile that you have written
+# Pushes the docker image to your GitHub Container Registry repository
+# Releases your newly pushed image to your Railway service using the Railway CLI
+
+#name: take-home-assignment-5123213
+
+#on:
+  #push:
+  #  branches:
+   #   - main
+
+#jobs:
+  # Enter your job steps here
+
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run tests
+      run: npm test
+
+    - name: Build Docker image
+      run: |
+        docker build -t assignment/my-app:$GITHUB_SHA .
+        docker tag assignment/my-app:$GITHUB_SHA assignment/my-app:latest
+
+    - name: Push Docker image to GitHub Container Registry
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: |
+         assignment/my-app:$GITHUB_SHA
+          assignment/my-app:latest
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Release Docker image to Railway
+      run: |
+        curl https://railway.app/cli | bash
+        railway login
+        railway use stingy-sky
+        railway run "docker pull ghcr.io/assignment/my-app:latest && docker run -d -p 80:3000 ghcr.io/assignment/my-app:latest"
